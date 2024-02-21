@@ -1,0 +1,24 @@
+# Qwen-VL
+transformers==4.32.0
+accelerate
+tiktoken
+einops
+transformers_stream_generator==0.0.4
+scipy
+torch~=2.2.0
+torchvision
+pillow
+tensorboard
+matplotlib
+
+# openAI API
+pydantic~=2.6.1
+fastapi~=0.109.2
+uvicorn[standard]~=0.27.1
+#sse_starlette
+
+# Qwen-VL int4-Optimum
+optimum
+# with cuda 11.8, if cuda 12.0, not need to add --extra-index-url
+--extra-index-url https://huggingface.github.io/autogptq-index/whl/cu118/
+auto-gptq
