@@ -1,4 +1,6 @@
+import logging
 import os
+import re
 from typing import Tuple, Literal, List, Optional
 from uuid import uuid4
 
@@ -30,8 +32,10 @@ def _create_query(_query: ChatMessage, cache_path: str = "cache"):
                 _query_list.append({"text": content.text})
             elif content.type == "image_url":
                 # todo: unSupported img url
-                _img_path = os.path.join(cache_path, f"image_{index}_{uuid4().hex[:8]}.png")
-                base64_to_img(content.image_url.url, _img_path)
+                match = re.match(r'^data:(?P<mime_type>image/.+);base64,(?P<base64_data>.+)', content.image_url.url)
+                _img_path = os.path.join(cache_path, f"image_{index}_{uuid4().hex[:8]}.{match.group('mime_type').split('/')[1]}")
+                logging.debug(f"Save Image, path: {_img_path}")
+                base64_to_img(match.group('base64_data'), _img_path)
                 _query_list.append({"image": _img_path})
         return _query_list
 

@@ -1,7 +1,6 @@
 import logging
 import os
 from contextlib import asynccontextmanager
-from shutil import rmtree
 from typing import Optional
 
 import torch
@@ -12,7 +11,10 @@ from fastapi.responses import JSONResponse
 # from fastapi.responses import StreamingResponse
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
+from routers import files_router
+from routers.files import FileNotFound, clean_expired_files_cron
 from tools.args import get_args
+from tools.logging_utils import log_set
 from tools.openai_types import ChatModelNotExists, ChatMessagesError, ChatFunctionCallNotAllow
 from tools.openai_types import ModelList, ChatCompletionResponse, ChatCompletionRequest
 from tools.qwen_chat import load_model, format_history
@@ -36,15 +38,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# routers
+app.include_router(files_router)    # /v1/files
+
 
 @app.on_event("startup")
 async def startup_event():
-    """load model and tokenizer"""
+    # init logging
+    log_set(logging.DEBUG)
+
+    # load model and tokenizer
     global MODEL, TOKENIZER
     MODEL, TOKENIZER = load_model(MODEL_NAME, trust_remote_code=True, device_map="cuda")
 
-    # create cache
-    os.makedirs(os.path.join(path, "cache"), exist_ok=True)
+    # clean expired files
+    clean_expired_files_cron.start()
 
 
 @asynccontextmanager
@@ -55,9 +63,6 @@ async def shutdown_event():
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
         torch.cuda.ipc_collect()
-
-    # clean cache
-    rmtree(os.path.join(path, "cache"), ignore_errors=True)
 
 
 @app.exception_handler(ChatModelNotExists)
@@ -100,6 +105,19 @@ async def chat_function_call_not_allow_exception_handler(request: Request, exc: 
     })
 
 
+@app.exception_handler(FileNotFound)
+async def file_not_found(request: Request, exc: FileNotFound):
+    """Handle the exception when the model does not exist."""
+    logging.debug(request)
+    return JSONResponse(status_code=404, content={
+        "object": "error",
+        "message": f"The file '{exc.file_id}' is not found",
+        "type": "FileNotFound",
+        "param": None,
+        "code": 404
+    })
+
+
 @app.get("/v1/models", response_model=ModelList, tags=["Models"])
 async def list_models():
     global MODEL_NAME
@@ -108,6 +126,7 @@ async def list_models():
 
 @app.post("/v1/chat/completions", response_model=ChatCompletionResponse, tags=["Chat"])
 async def chat_completions(request: ChatCompletionRequest):
+    logging.debug(f"Get request: {request}")
     global MODEL, TOKENIZER
     # verify model_name
     if request.model != MODEL_NAME:
@@ -115,6 +134,7 @@ async def chat_completions(request: ChatCompletionRequest):
 
     try:
         query, history, system = format_history(request.messages, TOKENIZER)
+        logging.debug(f"Get query: {query}, history: {history}, system: {system}")
     except ValueError as e:
         raise ChatMessagesError(messages=request.messages, exc=e.__str__())
 
@@ -135,6 +155,7 @@ async def chat_completions(request: ChatCompletionRequest):
     else:
         response, _ = MODEL.chat(TOKENIZER, query=query, history=history, append_history=False,
                                  top_p=request.top_p, temperature=request.temperature)
+        logging.debug(f"Return response: {response}")
         return ChatCompletionResponse(**{
             "object": "chat.completion",
             "model": MODEL_NAME,
