@@ -9,7 +9,7 @@ from typing import Literal, Optional
 
 import aiocron
 import aiofiles
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter, UploadFile, File, Form
 from fastapi import Depends
 from pydantic import BaseModel, Field
 from sqlalchemy import and_
@@ -48,8 +48,8 @@ class FileDeleteResponse(BaseModel):
 @aiocron.crontab('0 0 * * *')
 async def clean_expired_files_cron():
     """定时清理过期文件"""
-    with get_db(None) as db:
-        expired_files = db.query(FileRecord).filter(FileRecord.expiration < datetime.now()).all()
+    with get_db() as db:
+        expired_files = db.query(FileRecord).filter(and_(FileRecord.expiration < datetime.now())).all()
         for file_record in expired_files:
             os.remove(os.path.join(FILE_CACHE_DIR, file_record.filename))
             db.delete(file_record)
@@ -59,9 +59,8 @@ async def clean_expired_files_cron():
 @router.post("", response_model=FileResponse)
 async def upload_file(
         file: UploadFile = File(...),
-        purpose: Literal["fine-tune", "fine-tune-results", "assistants", "assistants_output"] = None,
+        purpose: str = Form(...),
         db: Session = Depends(get_db)):
-    # todo: can't get purpose from request body
     """文件上传接口"""
     logging.debug(f"Get request: {file.filename}, file type: {file.content_type}, purpose: {purpose}")
 

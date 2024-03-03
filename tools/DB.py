@@ -1,5 +1,3 @@
-from contextlib import contextmanager
-
 from sqlalchemy import Column, String, DateTime, create_engine, Integer
 from sqlalchemy.orm import declarative_base, Session
 from sqlalchemy.orm import sessionmaker
@@ -20,7 +18,6 @@ class FileRecord(Base):
     expiration = Column(DateTime, index=True)
 
 
-@contextmanager
 def get_db() -> Session:
     """
     Get the session for the database.
