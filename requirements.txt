@@ -20,6 +20,8 @@ aiofiles
 aiocron
 python-multipart
 SQLAlchemy
+# /v1/chat
+requests~=2.31.0
 
 # Qwen-VL int4-Optimum
 optimum

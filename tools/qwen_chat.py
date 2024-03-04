@@ -1,14 +1,11 @@
 import logging
-import os
-import re
 from typing import Tuple, Literal, List, Optional
-from uuid import uuid4
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers.generation import GenerationConfig
 
 from tools.openai_types import ChatMessage, ChatCompletionResponse
-from tools.tools import base64_to_img
+from tools.tools import download_img_from_url
 
 
 def load_model(_model_path: str, device_map: Literal["cuda", "cpu", "auto"] = "auto", trust_remote_code: bool = True
@@ -21,7 +18,7 @@ def load_model(_model_path: str, device_map: Literal["cuda", "cpu", "auto"] = "a
     return _model, _tokenizer
 
 
-def _create_query(_query: ChatMessage, cache_path: str = "cache"):
+def _create_query(_query: ChatMessage, **kwargs):
     """Create the query for the model.chat function."""
     if isinstance(_query.content, str):
         return [{"text": _query.content}]
@@ -31,11 +28,8 @@ def _create_query(_query: ChatMessage, cache_path: str = "cache"):
             if content.type == "text":
                 _query_list.append({"text": content.text})
             elif content.type == "image_url":
-                # todo: unSupported img url
-                match = re.match(r'^data:(?P<mime_type>image/.+);base64,(?P<base64_data>.+)', content.image_url.url)
-                _img_path = os.path.join(cache_path, f"image_{index}_{uuid4().hex[:8]}.{match.group('mime_type').split('/')[1]}")
+                _img_path = download_img_from_url(content.image_url.url, **kwargs)
                 logging.debug(f"Save Image, path: {_img_path}")
-                base64_to_img(match.group('base64_data'), _img_path)
                 _query_list.append({"image": _img_path})
         return _query_list
 
@@ -64,7 +58,7 @@ def format_history(_messages: List[ChatMessage], _tokenizer: AutoTokenizer, **kw
         _history = []
         it = iter(_messages)
         for prompt, response in zip(it, it):
-            _history.append((_tokenizer.from_list_format(_create_query(prompt)), response.content))
+            _history.append((_tokenizer.from_list_format(_create_query(prompt, **kwargs)), response.content))
 
     return _query, _history, _system
 
