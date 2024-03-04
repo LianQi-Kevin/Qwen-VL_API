@@ -8,7 +8,6 @@ import uvicorn
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-# from fastapi.responses import StreamingResponse
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from routers import files_router
@@ -18,8 +17,6 @@ from tools.logging_utils import log_set
 from tools.openai_types import ChatModelNotExists, ChatMessagesError, ChatFunctionCallNotAllow
 from tools.openai_types import ModelList, ChatCompletionResponse, ChatCompletionRequest
 from tools.qwen_chat import load_model, format_history
-
-# from tools.qwen_chat import stream_chat
 
 MODEL_NAME: Optional[str] = "Qwen/Qwen-VL-Chat-Int4"
 MODEL: Optional[AutoModelForCausalLM] = None
@@ -39,7 +36,7 @@ app.add_middleware(
 )
 
 # routers
-app.include_router(files_router)    # /v1/files
+app.include_router(files_router)  # /v1/files
 
 
 @app.on_event("startup")

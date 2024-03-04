@@ -13,8 +13,8 @@ class FileRecord(Base):
     filename = Column(String, index=True)
     bytes = Column(Integer, index=True)
     purpose = Column(String, index=True)
-    created_at = Column(DateTime, index=True)
-
+    created_at = Column(Integer, index=True)
+    content_type = Column(String, index=True)
     expiration = Column(DateTime, index=True)
 
 
