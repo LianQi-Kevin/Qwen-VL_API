@@ -52,10 +52,10 @@ def check_file_exists(file_id: str):
         raise FileNotFound(file_id=file_id)
 
 
-def remove_file(file_is: str):
+def remove_file(file_id: str):
     """删除文件"""
     try:
-        os.remove(os.path.join(FILE_CACHE_DIR, file_is))
+        os.remove(os.path.join(FILE_CACHE_DIR, file_id))
     except FileNotFoundError:
         pass
 
