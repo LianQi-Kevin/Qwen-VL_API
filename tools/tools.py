@@ -40,10 +40,10 @@ def download_img_from_url(url: str, save_dir: str = FILE_CACHE_DIR if FILE_CACHE
         response = requests_get(url)
         img_data = response.content
         extension = response.headers['content-type'].split('/')[1]
-
+        logging.info(f"Download Image, url: {url}, extension: {extension}")
     # save image
+    os.makedirs(save_dir, exist_ok=True)
     img_path = os.path.join(save_dir, f"image_{uuid4().hex[:8]}.{extension}")
     with open(img_path, 'wb') as f:
         f.write(img_data)
-    logging.debug(f"Save Image, path: {img_path}")
     return img_path

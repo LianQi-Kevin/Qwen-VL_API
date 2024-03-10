@@ -4,7 +4,7 @@ from typing import Tuple, Literal, List, Optional
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers.generation import GenerationConfig
 
-from tools.openai_types import ChatMessage, ChatCompletionResponse
+from tools.openai_types import ChatMessage, ChatCompletionResponse, ChatContentImage
 from tools.tools import download_img_from_url
 
 
@@ -18,13 +18,18 @@ def load_model(_model_path: str, device_map: Literal["cuda", "cpu", "auto"] = "a
     return _model, _tokenizer
 
 
+def sort_list(_data: List[ChatContentImage]):
+    """按类型排序列表, 用以修复: https://github.com/QwenLM/Qwen-VL/issues/164"""
+    return sorted(_data, key=lambda item: item.type not in ['image_url', 'box'])
+
+
 def _create_query(_query: ChatMessage, **kwargs):
     """Create the query for the model.chat function."""
     if isinstance(_query.content, str):
         return [{"text": _query.content}]
     else:
         _query_list = []
-        for index, content in enumerate(_query.content):
+        for index, content in enumerate(sort_list(_query.content)):
             if content.type == "text":
                 _query_list.append({"text": content.text})
             elif content.type == "image_url":
