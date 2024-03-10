@@ -28,11 +28,13 @@ def download_img_from_url(url: str, save_dir: str = FILE_CACHE_DIR if FILE_CACHE
         # base64 data
         img_data = b64decode(match.group('base64_data'))
         extension = match.group('mime_type').split('/')[1]
-    elif url.startswith('https://u23218-bcf9-65e4e0f6.westx.seetacloud.com:8443/'):
-        # 解析url中的路径部分，匹配file_id， todo: 临时措施，待优化
+    elif 'seetacloud.com' in url:
+        # todo: 待优化本地匹配逻辑
+        # 针对 autodl 的 'seetacloud.com' 进行特殊处理
+        # 解析url中的路径部分，匹配file_id
         file_id = url.split('/')[-2]
         check_file_exists(file_id)
-        return os.path.join('/root/Qwen-VL_API/cache', file_id)
+        return os.path.join(FILE_CACHE_DIR, file_id)
     else:
         # url
         response = requests_get(url)
