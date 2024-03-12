@@ -28,7 +28,7 @@ def download_img_from_url(url: str, save_dir: str = FILE_CACHE_DIR if FILE_CACHE
         # base64 data
         img_data = b64decode(match.group('base64_data'))
         extension = match.group('mime_type').split('/')[1]
-    elif 'seetacloud.com' in url:
+    elif 'seetacloud.com' in url or '127.0.0.1' in url or 'localhost' in url:
         # todo: 待优化本地匹配逻辑
         # 针对 autodl 的 'seetacloud.com' 进行特殊处理
         # 解析url中的路径部分，匹配file_id
