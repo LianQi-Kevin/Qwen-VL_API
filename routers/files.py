@@ -7,7 +7,6 @@ import uuid
 from datetime import datetime, timedelta
 from typing import Literal, Optional
 
-from aiocron import crontab
 import aiofiles
 from fastapi import APIRouter, UploadFile, File, Form
 from fastapi import Depends
@@ -58,17 +57,6 @@ def remove_file(file_id: str):
         os.remove(os.path.join(FILE_CACHE_DIR, file_id))
     except FileNotFoundError:
         pass
-
-
-@crontab('0 0 * * *')
-async def clean_expired_files_cron():
-    """定时清理过期文件"""
-    with get_db() as db:
-        expired_files = db.query(FileRecord).filter(and_(FileRecord.expiration < datetime.now())).all()
-        for file_record in expired_files:
-            db.delete(file_record)
-            db.commit()
-            remove_file(file_record.id)
 
 
 @router.post("", response_model=FileResponseModel)

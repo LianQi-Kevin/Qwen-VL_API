@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from routers import files_router
-from routers.files import FileNotFound, clean_expired_files_cron
+from routers.files import FileNotFound
 from tools.args import get_args
 from tools.logging_utils import log_set
 from tools.openai_types import ChatModelNotExists, ChatMessagesError, ChatFunctionCallNotAllow
@@ -47,9 +47,6 @@ async def startup_event():
     # load model and tokenizer
     global MODEL, TOKENIZER
     MODEL, TOKENIZER = load_model(MODEL_NAME, trust_remote_code=True, device_map="cuda")
-
-    # clean expired files
-    clean_expired_files_cron.start()
 
 
 @asynccontextmanager
