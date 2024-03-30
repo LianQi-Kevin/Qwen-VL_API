@@ -5,11 +5,18 @@ from uuid import uuid4
 from pydantic import BaseModel, Field
 
 
+class ModelInfo(BaseModel):
+    stream: Optional[bool] = Field(default=True)
+    VL: Optional[bool] = Field(default=False)
+    langchain: Optional[bool] = Field(default=False)
+
+
 class ModelCard(BaseModel):
     id: str
     object: str = "model"
     created: int = Field(default_factory=lambda: int(time.time()))
     owned_by: str = "owner"
+    config: ModelInfo = Field(default=None)
 
 
 class ModelList(BaseModel):

@@ -115,7 +115,19 @@ async def file_not_found(request: Request, exc: FileNotFound):
 @app.get("/v1/models", response_model=ModelList, tags=["Models"])
 async def list_models():
     global MODEL_NAME
-    return ModelList(**{"data": [{"id": MODEL_NAME, "owned_by": os.path.split(MODEL_NAME)[-2]}]})
+    return ModelList(**{
+        "data": [
+            {
+                "id": MODEL_NAME,
+                "owned_by": os.path.split(MODEL_NAME)[-2],
+                "config": {
+                    "stream": False,
+                    "VL": True,
+                    "langchain": False
+                }
+            }
+        ]
+    })
 
 
 @app.post("/v1/chat/completions", response_model=ChatCompletionResponse, tags=["Chat"])

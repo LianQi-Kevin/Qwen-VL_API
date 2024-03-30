@@ -4,7 +4,7 @@
 
 :: init huggingface
 @set HF_HOME=D:\PycharmProjects\Qwen-VL_API\huggingface_cache
-:: @set TRANSFORMERS_OFFLINE=1
+@set TRANSFORMERS_OFFLINE=1
 
 :: run OpenAI API server
 @set WORK_DIR=D:\PycharmProjects\Qwen-VL_API

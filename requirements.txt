@@ -8,6 +8,7 @@ scipy
 pillow
 tensorboard
 matplotlib
+cupy_cuda11x==12.1.0
 
 # fastapi
 pydantic~=2.6.1
